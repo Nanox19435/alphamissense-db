@@ -1,4 +1,4 @@
-use crate::aminoacids::{AminoAcid, AminoAcids};
+use crate::aminoacids::AminoAcid;
 use std::str::FromStr;
 
 /// Clasificación de la variante de la proteína
@@ -8,16 +8,14 @@ pub enum AmClass {
     Ambiguous(f64),
 }
 
-pub struct Variations {
-    base: AminoAcid,
-    variants: AminoAcids<AmClass>,
-}
-
 /// Representación de una variación
 pub struct Variation {
-    base: AminoAcid,
-    position: u16,
-    variant: AminoAcid,
+    /// Base del aminoacido.
+    pub base: AminoAcid,
+    /// Posicion de la variación.
+    pub position: u16,
+    /// Aminoacido modificado.
+    pub variant: AminoAcid,
 }
 
 impl FromStr for Variation {

@@ -26,12 +26,12 @@ pub enum AminoAcid {
 
 
 impl AminoAcid {
-    pub const SINGLE_LETTER_CODE: AminoAcids<char> = AminoAcids([
+    pub const SINGLE_LETTER_CODE: AminoAcidMap<char> = AminoAcidMap([
         'A', 'R', 'N', 'D', 'C', 'E', 'Q', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W',
         'Y', 'V',
     ]);
 
-    pub const THREE_LETTER_CODE: AminoAcids<&'static str> = AminoAcids([
+    pub const THREE_LETTER_CODE: AminoAcidMap<&'static str> = AminoAcidMap([
         "ALA", "ARG", "ASN", "ASP", "CYS", "GLU", "GLN", "GLY", "HIS", "ILE", "LEU", "LYS", "MET",
         "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL",
     ]);
@@ -93,21 +93,22 @@ impl FromStr for AminoAcid {
 }
 
 /// Struct que permite relacional los 20 aminoacidos con cualquier tipo de datos.
-pub struct AminoAcids<T>([T; 20]);
+/// TODO: Mejorar la API, probablemente armando a través de un iterador.
+pub struct AminoAcidMap<T>(pub [T; 20]);
 
-impl<T> std::ops::Index<AminoAcid> for AminoAcids<T> {
+impl<T> std::ops::Index<AminoAcid> for AminoAcidMap<T> {
     type Output = T;
 
     fn index(&self, index: AminoAcid) -> &Self::Output {
-        let AminoAcids(variants) = self;
+        let AminoAcidMap(variants) = self;
 
         variants.index(index.index())
     }
 }
 
-impl<T> std::ops::IndexMut<AminoAcid> for AminoAcids<T> {
+impl<T> std::ops::IndexMut<AminoAcid> for AminoAcidMap<T> {
     fn index_mut(&mut self, index: AminoAcid) -> &mut Self::Output {
-        let AminoAcids(variants) = self;
+        let AminoAcidMap(variants) = self;
 
         variants.index_mut(index.index())
     }

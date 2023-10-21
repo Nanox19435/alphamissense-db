@@ -1,9 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufRead;
 use std::str::FromStr;
 
-use crate::aminoacids::AminoAcids;
 use crate::variations::{AmClass, Variation};
 
 /// Representa la información en una fila de la tabla de sustituciones.
@@ -63,6 +62,7 @@ impl Table {
             .collect())
     } 
 
+    /// Obtiene los nombres de las proteinas y los guarda en un diccionario.
     fn get_genes(&self) -> HashMap<String, String> {
         let Table(rows) = self;
         rows.iter().map(|row| {
@@ -74,11 +74,5 @@ impl Table {
     }
 }
 
-#[derive(Hash, PartialEq, Eq)]
-struct UniprotId(String);
-
-/// función posición en el gen: usize -> [Ali, AmClass]
-struct GeneVariations(Vec<AminoAcids<AmClass>>);
-pub struct DataBase {
-    map: HashMap<UniprotId, GeneVariations>,
-}
+/// Módulo donde se define la principal estructura contenedora de los datos.
+pub mod database;
