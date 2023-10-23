@@ -1,6 +1,6 @@
 /// Módulo donde se definen las operaciones para construir la Base de Datos
-mod builder;
-
+mod database;
+/// Módulo donde se define la operación para extraer el nombre de un gen, dada su id en uniprot.
 mod uniprot;
 /// Módulo donde se definen operaciones refentes a Aminoacidos.
 mod aminoacids;
@@ -8,6 +8,11 @@ mod aminoacids;
 mod variations;
 
 fn main() {
-    //uniprot::get_genes_names("AlphaMissense_aa_substitutions.tsv");
-    let table = builder::Table::build_table("AlphaMissense_aa_substitutions.tsv");
+    let database = database::DataBase::open();
+    //println!("Base de datos cargada. Longitud: {}", database.len());
+    database._as_json();
+
+    //let names = database.get_names();
+
+    //database::serialize_names(&names);
 }

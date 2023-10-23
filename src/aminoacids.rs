@@ -1,5 +1,8 @@
 use std::str::FromStr;
 
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize, Debug)]
 pub enum AminoAcid {
     Alanine,
     Arginine,
@@ -94,6 +97,7 @@ impl FromStr for AminoAcid {
 
 /// Struct que permite relacional los 20 aminoacidos con cualquier tipo de datos.
 /// TODO: Mejorar la API, probablemente armando a través de un iterador.
+#[derive(Serialize, Deserialize, Debug)]
 pub struct AminoAcidMap<T>(pub [T; 20]);
 
 impl<T> std::ops::Index<AminoAcid> for AminoAcidMap<T> {

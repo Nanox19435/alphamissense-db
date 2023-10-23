@@ -1,11 +1,15 @@
+use serde::{Serialize, Deserialize};
+
 use crate::aminoacids::AminoAcid;
 use std::str::FromStr;
 
 /// Clasificación de la variante de la proteína
+#[derive(Serialize, Deserialize, Debug)]
 pub enum AmClass {
     Benign(f64),
     Pathogenic(f64),
     Ambiguous(f64),
+    Undefined
 }
 
 /// Representación de una variación

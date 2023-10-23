@@ -21,9 +21,9 @@ pub fn get_gene_name(uniprot_id: &str) -> String {
                     
                     genes.as_str().expect(&url).to_owned()
                 },
-                Err(e) => todo!(),
+                Err(_) => todo!(),
             }
         },
-        Err(e) => todo!(),
+        Err(_) => todo!(),
     } 
 }
