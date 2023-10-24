@@ -1,13 +1,14 @@
-use std::{collections::HashMap, io::BufRead};
+use std::collections::BTreeMap;
 use std::fs::File;
+use std::io::{Read, Write};
 use std::str::FromStr;
-use std::io::{Write, Read};
+use std::{collections::HashMap, io::BufRead};
 
 use bincode::Options;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{
-    aminoacids::{AminoAcidMap, AminoAcid},
+    aminoacids::{AminoAcid, AminoAcidMap},
     variations::{AmClass, Variation},
 };
 
@@ -22,7 +23,7 @@ impl FromStr for Row {
     type Err = ();
 
     fn from_str(row: &str) -> Result<Self, Self::Err> {
-        let mut values = row.split("\t"); 
+        let mut values = row.split("\t");
 
         let uniprot_id = values.next().ok_or(())?.to_owned();
         let protein_variant = Variation::from_str(values.next().ok_or(())?)?;
@@ -31,7 +32,7 @@ impl FromStr for Row {
             "benign" => AmClass::Benign(pathogenicity),
             "pathogenic" => AmClass::Pathogenic(pathogenicity),
             "ambiguous" => AmClass::Ambiguous(pathogenicity),
-            _ =>  return Err(()),
+            _ => return Err(()),
         };
 
         Ok(Row {
@@ -44,18 +45,14 @@ impl FromStr for Row {
 
 /// función posición en el gen: usize -> (Ali -> AmClass)
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GeneVariations{
-    base: AminoAcid, 
-    variants: Vec<AminoAcidMap<AmClass>>
+pub struct GeneVariations {
+    variants: Vec<(AminoAcid, AminoAcidMap<AmClass>)>,
 }
 
 impl GeneVariations {
-    pub fn get(&self, index: u16, variation: AminoAcid) -> Option<AmClass> {
+    pub fn pathogenicity(&self, index: u16, variation: AminoAcid) -> Option<AmClass> {
         let index = index as usize;
-
-        self.variants.get(index).map(|map| {
-            map[variation]
-        })
+        self.variants.get(index).map(|(_, map)| map[variation])
     }
 }
 
@@ -66,7 +63,7 @@ pub struct DataBase {
 
 fn percentage_completed(procedure: &str, count: usize, total: usize) {
     let c = 100 * count;
-    let p = total/100;
+    let p = total / 100;
 
     if count % p == 0 {
         println!("{}: {}%", procedure, c / total);
@@ -92,19 +89,22 @@ impl DataBase {
     pub fn load() -> Self {
         let mut file = File::open(DataBase::PATH).expect("Error al abrir la base de datos");
         let mut buf = Vec::new();
-        file.read_to_end(&mut buf).expect("Error al leer la base de datos");
+        file.read_to_end(&mut buf)
+            .expect("Error al leer la base de datos");
 
-        let options = bincode::config::DefaultOptions::new()
-        .with_varint_encoding();
+        let options = bincode::config::DefaultOptions::new().with_varint_encoding();
 
-        options.deserialize(&buf).expect("Error en la deserialización de la Base de Datos")
+        options
+            .deserialize(&buf)
+            .expect("Error en la deserialización de la Base de Datos")
     }
 
     pub fn new() -> Self {
         type M = HashMap<String, Vec<(Variation, AmClass)>>;
 
         let path = "AlphaMissense_aa_substitutions.tsv";
-        let file = File::open(path).expect("Error al leer el archivo");
+        let file =
+            File::open(path).expect("El programa necesita las predicciones de AlphaMissense");
         let buffer = std::io::BufReader::new(file);
 
         // Iteramos sobre las lineas, primero para crear un iterador de structs Row, es decir, parseamos.
@@ -114,7 +114,7 @@ impl DataBase {
             .skip(4)
             .map(|(n, row)| {
                 percentage_completed("Procesamiento de las filas", n, 216175355);
-                let row = row.expect(&format!("Error de lectura en línea: {}", n));
+                let row = row.expect("");
                 Row::from_str(&row).expect(&format!("Fila inválida: {}", n))
             })
             // Ahora, usamos un HashMap para relacionar un gen con todas sus posibles variaciones
@@ -135,42 +135,55 @@ impl DataBase {
                 map
             })
             .into_iter()
-            // Una vez tenemos relacionados todos los genes con todas sus variaciones, ordenamos las variaciones
-            // y juntamos las variaciones sobre la misma base en un único AminoAcidMap
-            .map(|(uniprot_id, mut v)| {
-                // Ordenamos usando la posición 
-                v.sort_by(|(a, _), (b, _)| a.position.cmp(&b.position));
-                let mut b = AminoAcid::Alanine;
-                let variants = v.into_iter()
-                    .fold(Vec::new(), |mut variants, (variation, class)| {
-                        let Variation { base, position, variant } = variation;
-                        // si la posición se encuentra fuera del vec, lo extendemos
-                        b = base;
-                        if variants.len() < position as usize {
-                            let mut map = AminoAcidMap([();20].map(|_| None));
-                            map[variant] = Some(class);
-                            variants.push(map)
+            // Una vez tenemos relacionados todos los genes con todas sus variaciones, juntamos en un hashmap las variaciones sobre el mismo codón.
+            .map(|(uniprot_id, variations)| {
+                type T = BTreeMap<u16, (AminoAcid, AminoAcidMap<AmClass>)>;
+                let variations = variations.into_iter().fold(
+                    BTreeMap::new(),
+                    |mut variations: T, (variation, class)| {
+                        let Variation {
+                            base,
+                            position,
+                            variant,
+                        } = variation;
+
+                        if let Some((_, map)) = variations.get_mut(&position) {
+                            map[variant] = class;
                         } else {
-                            unsafe {
-                                variants.last_mut().unwrap_unchecked()[variant] = Some(class)
-                            }
+                            variations.insert(
+                                position,
+                                (base, AminoAcidMap([(); 20].map(|_| AmClass::Undefined))),
+                            );
                         }
-                        variants
-                    })
-                    .into_iter()
-                    .map(|AminoAcidMap(map)| {
-                        AminoAcidMap(map.map(|e| {
-                            match e {
-                                Some(class) => class,
-                                None => AmClass::Undefined,
-                            }
-                        }))
-                    }).collect();
-                    let gene_variations = GeneVariations {
-                        base: b,
-                        variants
-                    };
-                (uniprot_id, gene_variations)
+
+                        variations
+                    },
+                ); // En este iterador, los valores están ordenados, y los iremos insertando en órden
+
+                // Almacenamos en un vector por motivos de rendimiento y de memoria
+                // También, prealocamos la memoria que creemos que va a requerir. Esto debería de acelerar el procedimiento.
+                let (last_position, _) = variations
+                    .last_key_value()
+                    .expect("El mapa no puede estar vacío");
+                let mut variation_string = Vec::with_capacity(*last_position as usize);
+                let mut counter = 0;
+                for (position, (base, variations)) in variations.into_iter() {
+                    if counter < position {
+                        // Llenamos con Undefined la diferencia de posiciones
+                        variation_string.extend((counter..position)
+                            .map(|_| (base, AminoAcidMap([(); 20].map(|_| AmClass::Undefined)))));
+                        counter = position;
+                    }
+                    // Asignamos la clase de patogenicidad a la posición que le corresponde
+                    variation_string[position as usize - 1] = (base, variations);
+                }
+
+                (
+                    uniprot_id,
+                    GeneVariations {
+                        variants: variation_string,
+                    },
+                )
             })
             .collect();
         DataBase { map }
@@ -181,13 +194,13 @@ impl DataBase {
     }
 
     pub fn serialize(&self) {
-        let options = bincode::config::DefaultOptions::new()
-        .with_varint_encoding();
+        let options = bincode::config::DefaultOptions::new().with_varint_encoding();
 
         let serialized = options.serialize(&self).expect("Serialización fallida");
         let mut file = File::create("variations.cdv").expect("Error al crear el archivo");
 
-        file.write_all(&serialized).expect("No se pudo guardar la información");
+        file.write_all(&serialized)
+            .expect("No se pudo guardar la información");
     }
 
     pub fn _genes_as_json(&self) {
@@ -195,6 +208,31 @@ impl DataBase {
         let serialized = serde_json::to_string(&keys).unwrap();
 
         println!("{}", serialized)
+    }
+
+    pub fn serialize_to_json(&self) {
+        // Serialize the data to JSON
+        let json_data = serde_json::to_string(&self).unwrap();
+
+        // Create or open the "prueba.json" file for writing
+        let mut file = File::create("prueba.json").unwrap();
+
+        // Write the JSON data to the file
+        file.write_all(json_data.as_bytes()).unwrap();
+    }
+
+    pub fn _deserialize_from_json(&self) -> Self {
+        // Open the "prueba.json" file for reading
+        let mut file = File::open("prueba.json").unwrap();
+        let mut json_data = String::new();
+
+        // Read the contents of the file into a String
+        file.read_to_string(&mut json_data).unwrap();
+
+        // Deserialize the JSON data into a Prueba struct
+        let data: Self = serde_json::from_str(&json_data).unwrap();
+
+        data
     }
 
     pub fn get(&self, key: &str) -> &GeneVariations {

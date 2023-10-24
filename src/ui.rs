@@ -108,9 +108,9 @@ impl eframe::App for App {
                         let variations = self.database.get(id);
                         *result = if let Ok(
                             Variation { base: _, position, variant }
-                        ) = Variation::from_str(&input) { 
+                        ) = Variation::from_str(&input) {
                             // TODO mandar mensaje cuando la base del aminoacido difiera a la introducida
-                            variations.get(position + 1, variant)
+                            variations.pathogenicity(position - 1, variant)
                         } else {
                             //Cambiaríamos el color del texto aquí, si supiera como
                             None
