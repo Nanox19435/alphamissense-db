@@ -3,7 +3,7 @@ extern crate simd_json;
 use simd_json::ValueAccess;
 
 /// Dada una id de uniprot, consulta a uniprot para conseguir su nombre.
-pub fn get_gene_name(uniprot_id: &str) -> String {
+pub fn _get_gene_name(uniprot_id: &str) -> String {
     let url = format!("https://www.uniprot.org/uniprot/{}.json", uniprot_id);
     match reqwest::blocking::get(&url) {
         Ok(re) => {

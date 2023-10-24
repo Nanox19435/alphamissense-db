@@ -5,9 +5,7 @@ use std::io::{Write, Read};
 
 use bincode::Options;
 use serde::{Serialize, Deserialize};
-use tokio::select;
 
-use crate::uniprot::get_gene_name;
 use crate::{
     aminoacids::{AminoAcidMap, AminoAcid},
     variations::{AmClass, Variation},
@@ -182,21 +180,11 @@ impl DataBase {
         file.write_all(&serialized).expect("No se pudo guardar la información");
     }
 
-    pub fn _as_json(&self) {
+    pub fn _genes_as_json(&self) {
         let keys: Vec<_> = self.map.keys().collect();
         let serialized = serde_json::to_string(&keys).unwrap();
 
         println!("{}", serialized)
-    }
-
-    pub fn get_names(&self) -> HashMap<String, String> {
-        let DataBase{map} = &self;
-
-        map.keys().map(|uniprot_id| {
-            let gene_name = get_gene_name(uniprot_id);
-
-            (uniprot_id.to_owned(), gene_name)
-        }).collect()
     }
 }
 
