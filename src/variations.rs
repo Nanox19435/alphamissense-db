@@ -4,7 +4,7 @@ use crate::aminoacids::AminoAcid;
 use std::str::FromStr;
 
 /// Clasificación de la variante de la proteína
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum AmClass {
     Benign(f64),
     Pathogenic(f64),
@@ -26,16 +26,20 @@ impl FromStr for Variation {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.len() < 3 {
+            return Err(());
+        } 
+
         let i = s.len() - 1;
 
         let base = AminoAcid::from_str(&s[0..1])?;
         let position = s[1..i].parse::<u16>().map_err(|_| ())?;
         let variant = AminoAcid::from_str(&s[i..])?;
 
-        return Ok(Variation {
+        Ok(Variation {
             base,
             position,
             variant,
-        });
+        })
     }
 }

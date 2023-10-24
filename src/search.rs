@@ -52,7 +52,7 @@ pub fn index() -> tantivy::Result<Index> {
 
 
 /// Regresa los 10 genes que mejor coinciden con la búsqueda.
-pub fn search(index: &Index, n: &str) -> tantivy::Result<Vec<String>> {
+pub fn search(index: &Index, n: &str) -> tantivy::Result<Vec<(String, String)>> {
     let gene = index.schema().get_field("Nombre_Gen")?;
     let uniprot_id = index.schema().get_field("Uniprot_ID")?;
     let reader = index
@@ -66,19 +66,28 @@ pub fn search(index: &Index, n: &str) -> tantivy::Result<Vec<String>> {
     query_parser.set_field_fuzzy(gene, true, 1, true);
     let query = query_parser.parse_query(n)?;
 
-    let top_results = searcher.search(&query, &TopDocs::with_limit(10))?;
+    let top_results = searcher
+        .search(&query, &TopDocs::with_limit(10))?;
 
     Ok(top_results
         .into_iter()
         .map(|(_, adress)| {
-            searcher
+            (searcher
                 .doc(adress)
                 .expect("El documento fue proveído por el searcher, es decir, lo contiene")
                 .get_first(uniprot_id)
                 .expect("Todo documento en el index tiene un atributo \"Uniprot_ID\" guardado")
                 .as_text()
                 .expect("Todo atributo gene es un string")
-                .to_string()
+                .to_string(),
+            searcher
+                .doc(adress)
+                .expect("El documento fue proveído por el searcher, es decir, lo contiene")
+                .get_first(gene)
+                .expect("Todo documento en el index tiene un atributo \"Nombre_Gen\" guardado")
+                .as_text()
+                .expect("Todo atributo gene es un string")
+                .to_string())
         })
         .collect())
 }

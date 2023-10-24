@@ -11,15 +11,16 @@ mod search;
 mod uniprot;
 /// Módulo donde se definen operaciones sobre variaciones.
 mod variations;
+/// Módulo donde se define la Interzad de Usuario
+mod ui;
+
 fn main() -> tantivy::Result<()> {
-    //let _database = database::DataBase::open();
-    //println!("Base de datos cargada. Longitud: {}", database.len());
+    let database = database::DataBase::open();
+    println!("Base de datos cargada. Longitud: {}", database.len());
 
     let index = search::index()?;
 
-    for r in search::search(&index, "SPAG")? {
-        println!("{}", r)
-    }
+    ui::main_ui(database, index).expect("Interfaz de usuario debe de poder construirse");
 
     Ok(())
 }

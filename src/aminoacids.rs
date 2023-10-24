@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Copy, Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum AminoAcid {
     Alanine,
     Arginine,

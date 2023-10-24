@@ -44,9 +44,19 @@ impl FromStr for Row {
 
 /// función posición en el gen: usize -> (Ali -> AmClass)
 #[derive(Serialize, Deserialize, Debug)]
-struct GeneVariations{
+pub struct GeneVariations{
     base: AminoAcid, 
     variants: Vec<AminoAcidMap<AmClass>>
+}
+
+impl GeneVariations {
+    pub fn get(&self, index: u16, variation: AminoAcid) -> Option<AmClass> {
+        let index = index as usize;
+
+        self.variants.get(index).map(|map| {
+            map[variation]
+        })
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -103,7 +113,7 @@ impl DataBase {
             .enumerate()
             .skip(4)
             .map(|(n, row)| {
-                //percentage_completed("Procesamiento de las filas", n, 216175355);
+                percentage_completed("Procesamiento de las filas", n, 216175355);
                 let row = row.expect(&format!("Error de lectura en línea: {}", n));
                 Row::from_str(&row).expect(&format!("Fila inválida: {}", n))
             })
@@ -186,15 +196,8 @@ impl DataBase {
 
         println!("{}", serialized)
     }
-}
 
-
-pub fn serialize_names(names: &HashMap<String, String>) {
-    let options = bincode::config::DefaultOptions::new()
-        .with_varint_encoding();
-    let serialized = options.serialize(names).expect("Error serializando los nombres");
-    
-    let mut file = File::create("gene_names.cdv").expect("Error al crear el archivo");
-
-    file.write_all(&serialized).expect("No se pudo guardar la información");
+    pub fn get(&self, key: &str) -> &GeneVariations {
+        &self.map[key]
+    }
 }
