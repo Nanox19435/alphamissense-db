@@ -1,6 +1,6 @@
 extern crate simd_json;
 
-use simd_json::ValueAccess;
+use simd_json::prelude::*;
 
 /// Dada una id de uniprot, consulta a uniprot para conseguir su nombre.
 pub fn _get_gene_name(uniprot_id: &str) -> String {
