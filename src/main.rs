@@ -16,8 +16,6 @@ mod search;
 mod uniprot;
 /// Módulo donde se definen operaciones sobre variaciones.
 mod variations;
-/// Módulo donde se define la Interzad de Usuario
-mod ui;
 
 #[macro_use] extern crate rocket;
 

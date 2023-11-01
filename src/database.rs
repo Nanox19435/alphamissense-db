@@ -171,13 +171,7 @@ impl DataBase {
             }
         }
 
-        //println!("{}", genes.iter().fold(0, |count, (_, v)| count + v.0.iter().filter(|e| e.is_none()).count()));
-
         DataBase(genes)
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
     }
 
     pub fn serialize(&self) {
