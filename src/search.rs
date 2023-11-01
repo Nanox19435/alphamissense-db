@@ -70,7 +70,7 @@ pub fn search(index: &Index, n: &str) -> tantivy::Result<Vec<(String, String)>> 
     let query = query_parser.parse_query(n)?;
 
     let top_results = searcher
-        .search(&query, &TopDocs::with_limit(10))?;
+        .search(&query, &TopDocs::with_limit(20))?;
 
     Ok(top_results
         .into_iter()
