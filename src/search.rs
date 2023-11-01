@@ -36,8 +36,11 @@ pub fn index() -> tantivy::Result<Index> {
                     uniprot_id => id
                 ))?;
             }
+            println!("100%");
 
+            println!("Commiting...");
             index_writer.commit()?;
+            println!("Commited!");
 
             Ok(index)
         }

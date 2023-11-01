@@ -6,9 +6,9 @@ use std::str::FromStr;
 /// Clasificación de la variante de la proteína
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum AmClass {
-    Benign(f64),
-    Pathogenic(f64),
-    Ambiguous(f64),
+    Benign(f32),
+    Pathogenic(f32),
+    Ambiguous(f32),
     Undefined
 }
 
