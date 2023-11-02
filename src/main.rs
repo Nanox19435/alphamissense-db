@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use rocket::{State, response::status};
+use rocket::{State, response::status, fs::FileServer};
 use variations::Variation;
 
 #[macro_use]
@@ -55,6 +55,7 @@ fn rocket() -> _ {
     rocket::build()
         .manage(database)
         .manage(index)
+        .mount("/", FileServer::from("frontend/build"))
         .mount("/hello", routes![world])
         .mount("/search", routes![query])
         .mount("/variants", routes![get_variants])

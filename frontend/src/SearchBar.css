@@ -1,0 +1,38 @@
+.search-bar {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 70vh;
+  }
+  
+  .search-bar input {
+    padding: 10px;
+    width: 300px;
+    font-size: 16px;
+    border-radius: 4px 0 0 4px; /* Adjust as needed */
+    border: 1px solid #ccc;
+  }
+  
+  .search-bar button {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 0 4px 4px 0; /* Adjust to match input's border-radius */
+    cursor: pointer;
+    background-color: #f0f0f0;
+  }
+
+  .item-list {
+    max-height: 500px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .item-list button {
+    width: 400px;
+    margin: 5px 0;
+    text-align: center;
+  }

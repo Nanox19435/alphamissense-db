@@ -65,12 +65,23 @@ pub fn search(index: &Index, n: &str) -> tantivy::Result<Vec<(String, String)>> 
 
     let searcher = reader.searcher();
 
-    let mut query_parser = QueryParser::for_index(&index, vec![gene]);
-    query_parser.set_field_fuzzy(gene, true, 1, true);
+    let query_parser = QueryParser::for_index(&index, vec![gene]);
     let query = query_parser.parse_query(n)?;
+    let result = searcher.search(&query, &TopDocs::with_limit(1))?;
 
-    let top_results = searcher
-        .search(&query, &TopDocs::with_limit(20))?;
+    let top_results = if result.is_empty() {
+        // Si no se encontró que la cadena exacta corresponda a un gen, hace una búsqueda difusa
+        let mut query_parser = QueryParser::for_index(&index, vec![gene]);
+        query_parser.set_field_fuzzy(gene, true, 1, true);
+        let query = query_parser.parse_query(n)?;
+
+        searcher
+            .search(&query, &TopDocs::with_limit(20))?
+    } else {
+        result
+    };
+
+    
 
     Ok(top_results
         .into_iter()
